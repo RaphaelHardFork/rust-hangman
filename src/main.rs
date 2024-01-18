@@ -2,6 +2,14 @@ extern crate rand;
 use rand::Rng;
 use std::{io, ops::Add};
 
+use dictionary::words::Dictionary;
+use game::game::Game;
+use hangman::Hangman;
+
+mod dictionary;
+mod game;
+mod hangman;
+
 fn main() {
     let word: String = get_random_word().to_uppercase();
     let mut ans: String = String::new();
@@ -24,7 +32,7 @@ fn main() {
         // game core
         loop {
             let mut letter: String = String::new();
-            print_hangman(attempts);
+            Hangman::print_hangman(attempts);
             println!(
                 "\nThe word to guess: {}\nType your letter:\n(attempts {}/6)",
                 guess,
@@ -65,7 +73,7 @@ fn main() {
             if index == word.len() {
                 println!("You find the word: {}", word);
                 println!("You win the game! Congrat!");
-                print_hangman(6);
+                Hangman::print_hangman(6);
                 break;
             }
 
@@ -73,7 +81,7 @@ fn main() {
             if attempts >= 5 {
                 println!("Sorry you fail...");
                 println!("The word was {}", word);
-                print_hangman(attempts);
+                Hangman::print_hangman(attempts);
                 break;
             }
         }
@@ -89,18 +97,4 @@ fn get_random_word() -> String {
     ];
 
     String::from(WORDS[rand::thread_rng().gen_range(0..WORDS.len())])
-}
-
-fn print_hangman(index: usize) {
-    const HANGMAN: [&str; 7] = [
-        "          \n          \n          \n          \n          \n          \n==========",
-        "       +  \n       |  \n       |  \n       |  \n       |  \n       |  \n==========",
-        "   +---+  \n       |  \n       |  \n       |  \n       |  \n       |  \n==========",
-        "   +---+  \n   |   |  \n   O   |  \n       |  \n       |  \n       |  \n==========",
-        "   +---+  \n   |   |  \n   O   |  \n  /|\\  |  \n       |  \n       |  \n==========",
-        "   +---+  \n   |   |  \n   O   |  \n  /|\\  |  \n  / \\  |  \n       |  \n==========",
-        "   +---+  \n   '   |  \n       |  \n  \\O/  |  \n   |   |  \n  / \\  |  \n==========",
-    ];
-
-    println!("{}", HANGMAN[index])
 }

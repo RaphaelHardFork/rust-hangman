@@ -5,8 +5,10 @@ git clone
 cargo build
 ```
 
-## MVP
+## TODO
 
-- choose a word by an user
-- player have to guess it into 7 attemps
-- display nothing
+- [ ] Modularize
+- [ ] Dictionary custom, add file in .txt
+- [ ] Calculate and store a score in JSON
+- [ ] Like a game (enter/exit)
+- [ ] Have hints
