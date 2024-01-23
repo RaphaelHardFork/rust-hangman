@@ -1,106 +1,92 @@
-extern crate rand;
-use rand::Rng;
-use std::{io, ops::Add};
+mod dict;
+mod error;
+mod game;
+mod hangman;
+mod utils;
 
-fn main() {
-    let word: String = get_random_word().to_uppercase();
-    let mut ans: String = String::new();
+pub use self::error::{Error, Result};
 
-    println!("Welcome to Hangman game!\n\nThe goal is to guess the word in 5 attempt\n\n");
-    println!("Are you ready? (y/n)");
-    io::stdin().read_line(&mut ans).expect("Start failed");
-    let ans: char = ans.trim().parse().expect("Failed");
-    if ans == 'n' {
-        println!("Ok, good bye");
-    } else if ans != 'y' {
-        println!("{} is not an answer...", ans);
-    } else {
-        println!("\n\nLet's go!!\n\n");
+use crate::game::Game;
+use crate::utils::cli::{letter_prompt, loose, loose_b, prompt, win, win_b};
+use console::Term;
 
-        let mut guess = String::from("_ ".repeat(word.len()));
-        let mut attempts = 0;
-        let mut index = 0;
+fn main() -> Result<()> {
+    let mut game = Game::init_game()?;
 
-        // game core
-        loop {
-            let mut letter: String = String::new();
-            print_hangman(attempts);
+    let input = prompt("Are you ready (y/n)")?;
+    if input.as_str() == "n" {
+        game.quit();
+        return Ok(());
+    }
+
+    let term = Term::stdout();
+
+    loop {
+        term.clear_screen()?;
+        println!("New game with: {}\n{}", game.word, game.guess); // DEV
+
+        game.hangman.print_hangman();
+        println!("Attempts {}/5\n\n", game.hangman.attemps);
+        println!("Word to guess: {}\n", game.guess);
+
+        // Game over
+        if game.hangman.attemps == 5 {
             println!(
-                "\nThe word to guess: {}\nType your letter:\n(attempts {}/6)",
-                guess,
-                attempts + 1
+                "{} {}\n",
+                loose(&"You lose the word was: ".to_string()),
+                loose_b(&game.word)
             );
-            letter.clear();
-            io::stdin().read_line(&mut letter).expect("Failed");
-            letter = letter.trim().to_string();
-
-            // check input
-            if letter.len() == 0 {
-                println!("Please input something");
-                continue;
-            } else if letter.len() > 1 {
-                println!("Please input only one letter");
-                continue;
+            let input = prompt("Play again (y/n)")?;
+            match input.as_str() {
+                "y" => {
+                    game.new_hangman()?;
+                    continue;
+                }
+                "n" => {
+                    game.quit();
+                    break;
+                }
+                _ => {}
             }
+        }
 
-            if letter.to_uppercase() == &word[index..index + 1] {
-                guess = if index == 0 {
-                    String::from(&word[0..index + 1])
-                        .add(" ")
-                        .add(&guess[2..guess.len() - index * 2])
-                } else {
-                    String::from(&guess[0..index * 2])
-                        .add(&word[index..index + 1])
-                        .add(" ")
-                        .add(&guess[(index * 2) + 2..])
-                };
-                println!("\n{} was the good letter", letter.to_uppercase());
-                index += 1;
-            } else {
-                println!("{} is the wrong letter", letter.to_uppercase());
-                attempts += 1;
-            }
+        let letter = letter_prompt("Guess the next letter")?;
 
-            // is the game winned
-            if index == word.len() {
-                println!("You find the word: {}", word);
-                println!("You win the game! Congrat!");
-                print_hangman(6);
-                break;
-            }
+        // validate letter
+        let letter_to_guess = game
+            .word
+            .chars()
+            .nth(game.hangman.progress)
+            .ok_or("No more letter to guess")?;
 
-            // if the guess fail
-            if attempts >= 5 {
-                println!("Sorry you fail...");
-                println!("The word was {}", word);
-                print_hangman(attempts);
-                break;
+        if letter == letter_to_guess {
+            game.hangman.progress();
+            game.update_guess();
+        } else {
+            game.hangman.attemp();
+        }
+
+        // game winned
+        if game.hangman.progress == game.word.len() {
+            println!(
+                "{} {}\n",
+                win(&"Congratulations! You guessed the word: ".to_string()),
+                win_b(&game.word)
+            );
+            let input = prompt("Play again (y/n)")?;
+            match input.as_str() {
+                "y" => {
+                    game.new_hangman()?;
+                    continue;
+                }
+                "n" => {
+                    game.quit();
+                    break;
+                }
+                _ => {}
             }
         }
     }
-}
 
-fn get_random_word() -> String {
-    const WORDS: [&str; 37] = [
-        "word", "time", "number", "way", "people", "water", "day", "part", "sound", "work",
-        "place", "year", "back", "thing", "name", "sentence", "man", "line", "boy", "farm", "end",
-        "men", "land", "home", "hand", "picture", "air", "animal", "house", "page", "letter",
-        "point", "mother", "answer", "America", "world", "food",
-    ];
-
-    String::from(WORDS[rand::thread_rng().gen_range(0..WORDS.len())])
-}
-
-fn print_hangman(index: usize) {
-    const HANGMAN: [&str; 7] = [
-        "          \n          \n          \n          \n          \n          \n==========",
-        "       +  \n       |  \n       |  \n       |  \n       |  \n       |  \n==========",
-        "   +---+  \n       |  \n       |  \n       |  \n       |  \n       |  \n==========",
-        "   +---+  \n   |   |  \n   O   |  \n       |  \n       |  \n       |  \n==========",
-        "   +---+  \n   |   |  \n   O   |  \n  /|\\  |  \n       |  \n       |  \n==========",
-        "   +---+  \n   |   |  \n   O   |  \n  /|\\  |  \n  / \\  |  \n       |  \n==========",
-        "   +---+  \n   '   |  \n       |  \n  \\O/  |  \n   |   |  \n  / \\  |  \n==========",
-    ];
-
-    println!("{}", HANGMAN[index])
+    Ok(())
 }
