@@ -1,1 +1,11 @@
-/target
+# By Default, Ignore any .*, except .gitignore
+.*
+!.gitignore
+
+# -- Rust
+# For .cargo/config.toml
+!.cargo/
+target/
+
+# (commit Cargo.lock for real project)
+# Cargo.lock
