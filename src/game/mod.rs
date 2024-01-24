@@ -1,8 +1,13 @@
 mod dict;
 mod hangman;
+mod player;
+mod score;
+
+pub use self::player::Player;
 
 use self::dict::Dict;
 use self::hangman::Hangman;
+use self::score::Score;
 use crate::utils::cli::{info, letter_prompt, loose, loose_b, prompt, win, win_b};
 use crate::utils::string_to_guess;
 use crate::Result;
@@ -12,6 +17,7 @@ pub struct Game {
     pub dict: Dict,
     pub hangman: Hangman,
     pub word: String,
+    pub user: Option<Player>,
 }
 
 // region:			--- Game Constructors
@@ -33,6 +39,7 @@ impl Game {
             dict,
             word,
             hangman: Hangman::new(),
+            user: None,
         })
     }
 
@@ -75,6 +82,10 @@ impl Game {
         Ok(())
     }
 
+    pub fn register_user(&mut self, username: &str) {
+        self.user = Some(Player::create(username))
+    }
+
     pub fn is_game_over(&self) -> bool {
         // game winned
         if self.hangman.progress == self.word.len() {
@@ -96,6 +107,10 @@ impl Game {
         }
     }
 
+    pub fn calculate_score(&self) -> Result<Score> {
+        Score::calculate_score(&self.word, self.hangman.attemps)
+    }
+
     pub fn will_play_again(&mut self) -> Result<bool> {
         let input = prompt("Play again (y/n)")?;
         if input.as_str() == "y" {
@@ -108,6 +123,7 @@ impl Game {
     }
 
     pub fn quit(&self) {
+        // should save score
         println!("{}", info(&"\nBye! See you soon\n".to_string()));
     }
 }
@@ -129,6 +145,7 @@ mod tests {
             dict: Dict::new(),
             hangman: Hangman::new(),
             word: game.word.clone(),
+            user: None,
         };
 
         assert_eq!(game, fx_game);

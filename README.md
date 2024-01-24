@@ -9,5 +9,5 @@
 - [x] create types for the game (+)
 - [ ] choose language (create a config if needed)
 - [ ] hint with ollama (+++) as an option
-- [ ] do unit test (++)
+- [x] do unit test (++)
 - [ ] comment code only as needed (try rust doc)
