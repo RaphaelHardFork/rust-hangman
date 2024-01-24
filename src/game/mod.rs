@@ -7,6 +7,7 @@ use crate::utils::cli::{info, letter_prompt, loose, loose_b, prompt, win, win_b}
 use crate::utils::string_to_guess;
 use crate::Result;
 
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Game {
     pub dict: Dict,
     pub hangman: Hangman,
@@ -112,3 +113,45 @@ impl Game {
 }
 
 // endregion:		--- Game Logic
+
+// region:    --- Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    pub type Result<T> = core::result::Result<T, Error>;
+    pub type Error = Box<dyn std::error::Error>;
+
+    #[test]
+    fn test_init_game_ok() -> Result<()> {
+        let game = Game::init_game()?;
+        let fx_game = Game {
+            dict: Dict::new(),
+            hangman: Hangman::new(),
+            word: game.word.clone(),
+        };
+
+        assert_eq!(game, fx_game);
+        Ok(())
+    }
+
+    #[test]
+    fn test_new_hangman_ok() -> Result<()> {
+        let fx_hangman = Hangman {
+            attemps: 0,
+            progress: 0,
+        };
+        let mut game = Game::init_game()?;
+        let word = game.word.clone();
+        game.hangman.attemp();
+        game.hangman.progress();
+
+        game.new_hangman()?;
+
+        assert_eq!(game.hangman, fx_hangman);
+        assert_ne!(word, game.word);
+
+        Ok(())
+    }
+}
+// endregion:		--- Tests

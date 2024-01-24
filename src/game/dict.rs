@@ -2,6 +2,7 @@ use rand::Rng;
 
 use crate::Result;
 
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Dict {
     pub words: Vec<String>,
 }

@@ -7,9 +7,8 @@ use crate::Result;
 
 pub fn prompt(text: &str) -> Result<String> {
     let theme = ColorfulTheme {
-        prompt_style: Style::new().for_stderr().color256(56),
-        prompt_suffix: style("?".to_string()).color256(56).for_stderr(),
-        // prompt_prefix: style("?".to_string()).color256(56).for_stderr(),
+        prompt_style: Style::new().for_stderr().black(),
+        prompt_suffix: style("?".to_string()).black().for_stderr(),
         ..Default::default()
     };
 
@@ -27,8 +26,8 @@ pub fn prompt(text: &str) -> Result<String> {
 
 pub fn letter_prompt(text: &str) -> Result<char> {
     let theme = ColorfulTheme {
-        prompt_style: Style::new().for_stderr().color256(67),
-        prompt_suffix: style("?".to_string()).color256(67).for_stderr(),
+        prompt_style: Style::new().for_stderr().blue(),
+        prompt_suffix: style("?".to_string()).blue().for_stderr(),
         ..Default::default()
     };
 
@@ -57,18 +56,23 @@ pub fn letter_prompt(text: &str) -> Result<char> {
 pub fn info(text: &String) -> StyledObject<String> {
     style(text.to_owned()).color256(25).bold()
 }
+
 pub fn loose(text: &String) -> StyledObject<String> {
     style(text.to_owned()).color256(1)
 }
+
 pub fn loose_b(text: &String) -> StyledObject<String> {
     style(text.to_owned()).color256(1).bold()
 }
+
 pub fn win_b(text: &String) -> StyledObject<String> {
     style(text.to_owned()).color256(43).bold()
 }
+
 pub fn win(text: &String) -> StyledObject<String> {
     style(text.to_owned()).color256(43)
 }
+
 pub fn hangman(text: &String) -> StyledObject<String> {
     style(text.to_owned()).color256(1)
 }
