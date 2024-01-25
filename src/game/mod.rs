@@ -3,12 +3,15 @@ mod hangman;
 mod player;
 mod score;
 
+use std::path::Path;
+
 pub use self::player::Player;
 
 use self::dict::Dict;
 use self::hangman::Hangman;
 use self::score::Score;
-use crate::utils::cli::{info, letter_prompt, loose, loose_b, prompt, win, win_b};
+use crate::utils::cli::{closed_prompt, info, letter_prompt, loose, loose_b, win, win_b};
+use crate::utils::files::save_to_json;
 use crate::utils::string_to_guess;
 use crate::Result;
 
@@ -57,7 +60,11 @@ impl Game {
 impl Game {
     pub fn display_turn(&self) {
         self.hangman.print_hangman();
-        println!("Attempts {}/5\n\n", self.hangman.attemps);
+        println!("Attempts {}/5", self.hangman.attemps);
+        println!(
+            "Score: {}\n\n",
+            Score::calculate_pure_score(&self.word, self.hangman.attemps)
+        );
         println!(
             "Word to guess: {}\n",
             string_to_guess(&self.word, self.hangman.progress)
@@ -86,7 +93,7 @@ impl Game {
         self.user = Some(Player::create(username))
     }
 
-    pub fn is_game_over(&self) -> bool {
+    pub fn is_game_over(&mut self) -> Result<bool> {
         // game winned
         if self.hangman.progress == self.word.len() {
             println!(
@@ -94,25 +101,40 @@ impl Game {
                 win(&"Congratulations! You guessed the word: ".to_string()),
                 win_b(&self.word)
             );
-            true
+            self.calculate_score()?;
+            Ok(true)
         } else if self.hangman.attemps == 5 {
             println!(
                 "{} {}\n",
                 loose(&"You lose the word was: ".to_string()),
                 loose_b(&self.word)
             );
-            true
+            Ok(true)
         } else {
-            false
+            Ok(false)
         }
     }
 
-    pub fn calculate_score(&self) -> Result<Score> {
-        Score::calculate_score(&self.word, self.hangman.attemps)
+    fn calculate_score(&mut self) -> Result<()> {
+        if let Some(user) = &mut self.user {
+            let score = Score::calculate_score(&self.word, self.hangman.attemps)?;
+            user.scores.push(score);
+        }
+        Ok(())
+    }
+
+    pub fn load_scores(&mut self, username: &str) -> Result<()> {
+        let file_path = format!(".scores/{}.json", username);
+        let file_path: &Path = file_path.as_ref();
+        let scores = Score::load_score_from_json(&file_path)?;
+        if let Some(user) = &mut self.user {
+            user.scores = scores;
+        }
+        Ok(())
     }
 
     pub fn will_play_again(&mut self) -> Result<bool> {
-        let input = prompt("Play again (y/n)")?;
+        let input = closed_prompt("Play again (y/n)")?;
         if input.as_str() == "y" {
             self.new_hangman()?;
             Ok(true)
@@ -122,9 +144,16 @@ impl Game {
         }
     }
 
-    pub fn quit(&self) {
-        // should save score
+    pub fn quit(&self) -> Result<()> {
+        match &self.user {
+            Some(user) => {
+                println!("{}", info(&"User scores saved".to_string()));
+                user.save_user()?
+            }
+            None => {}
+        };
         println!("{}", info(&"\nBye! See you soon\n".to_string()));
+        Ok(())
     }
 }
 
