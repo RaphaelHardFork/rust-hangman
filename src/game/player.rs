@@ -5,7 +5,7 @@ use lazy_regex::regex_captures;
 use serde::Serialize;
 use std::path::Path;
 
-const SCORES_DIR: &str = ".scores";
+pub const SCORES_DIR: &str = ".scores";
 const JSON_EXT: &str = ".json";
 
 #[derive(Serialize, Debug)]
@@ -35,6 +35,15 @@ impl Player {
                     .map(|(_, _, username)| username.to_string())
             })
             .collect();
+
+        // let usernames: Vec<String> = files
+        //     .iter()
+        //     .filter_map(|f| {
+        //         let f_str = f.to_str()?;
+        //         re.captures(f_str)
+        //             .and_then(|caps| caps.get(2).map(|username| username.as_str().to_string()))
+        //     })
+        //     .collect();
 
         Ok(usernames)
     }

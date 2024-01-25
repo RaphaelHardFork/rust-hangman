@@ -87,7 +87,7 @@ pub fn select_user(usernames: &Vec<String>, text: &str) -> Result<Option<String>
     };
 
     let selection = Select::with_theme(&theme)
-        .with_prompt("What do you choose?")
+        .with_prompt(text)
         .items(&usernames)
         .item("Create an user")
         .interact()?;

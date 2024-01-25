@@ -3,17 +3,20 @@ mod hangman;
 mod player;
 mod score;
 
-use std::path::Path;
+use lazy_regex::regex_captures;
 
 pub use self::player::Player;
 
 use self::dict::Dict;
 use self::hangman::Hangman;
+use self::player::SCORES_DIR;
 use self::score::Score;
 use crate::utils::cli::{closed_prompt, info, letter_prompt, loose, loose_b, win, win_b};
-use crate::utils::files::save_to_json;
+use crate::utils::files::list_files;
 use crate::utils::string_to_guess;
 use crate::Result;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Game {
@@ -33,7 +36,7 @@ impl Game {
         println!(
             "{}",
             info(
-                &"Welcome to Hangman game!\n\nThe goal is to guess the word in 5 attempt\n\n"
+                &"Welcome to Hangman game!\n\nThe goal is to guess the word in 5 attempts, create an user to play.\n\n"
                     .to_string()
             )
         );
@@ -55,10 +58,10 @@ impl Game {
 }
 // endregion:		--- Game Constructors
 
-// region:			--- Game Logic
+// region:			--- Game Messages
 
 impl Game {
-    pub fn display_turn(&self) {
+    pub fn print_round_start(&self) {
         self.hangman.print_hangman();
         println!("Attempts {}/5", self.hangman.attemps);
         println!(
@@ -71,6 +74,32 @@ impl Game {
         );
     }
 
+    pub fn print_round_win(&self) {
+        println!(
+            "{} {}\n",
+            win(&"Congratulations! You guessed the word: ".to_string()),
+            win_b(&self.word)
+        );
+    }
+
+    pub fn print_round_lose(&self) {
+        println!(
+            "{} {}\n",
+            loose(&"You lose the word was: ".to_string()),
+            loose_b(&self.word)
+        );
+    }
+
+    pub fn print_game_out(&self) {
+        println!("{}", info(&"\nBye! See you soon\n".to_string()));
+    }
+}
+
+// endregion:		--- Game Messages
+
+// region:			--- Game Logic
+
+impl Game {
     pub fn guess_a_letter(&mut self) -> Result<()> {
         let letter = letter_prompt("Guess the next letter")?;
 
@@ -139,7 +168,7 @@ impl Game {
             self.new_hangman()?;
             Ok(true)
         } else {
-            self.quit();
+            self.quit()?;
             Ok(false)
         }
     }
@@ -158,6 +187,46 @@ impl Game {
 }
 
 // endregion:		--- Game Logic
+
+// region:			--- Game Players
+impl Game {
+    pub fn get_players_hashmap(&self) -> Result<HashMap<String, PathBuf>> {
+        // read JSON
+        let files = list_files(SCORES_DIR.as_ref(), None, None)?;
+
+        // create the hashmap
+        let players_hashmap: HashMap<String, PathBuf> = files
+            .iter()
+            .filter_map(|f| {
+                let file_str = f.to_str()?;
+                regex_captures!(r"^([^/]+)/([^/]+)\.json$", file_str)
+                    .map(|(path, _, username)| (username.to_string(), f.to_owned()))
+            })
+            .collect();
+
+        Ok(players_hashmap)
+    }
+
+    pub fn get_usernames(&self) -> Result<Vec<String>> {
+        let players_hashmap = self.get_players_hashmap()?;
+        let usernames: Vec<String> = players_hashmap.keys().map(|k| k.to_owned()).collect();
+
+        Ok(usernames)
+    }
+
+    pub fn get_username_path(
+        &self,
+        players_hashmap: &mut HashMap<String, PathBuf>,
+        username: &str,
+    ) -> Result<PathBuf> {
+        let path = players_hashmap
+            .remove(username)
+            .ok_or(format!("Cannot find path for {}", username))?;
+
+        Ok(path)
+    }
+}
+// endregion:		--- Game Players
 
 // region:    --- Tests
 #[cfg(test)]
