@@ -2,7 +2,7 @@ use console::{style, Style, StyledObject};
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use lazy_regex::regex_is_match;
 
-use crate::{game::Player, Result};
+use crate::Result;
 
 // 8-bit color picker => https://codepen.io/kevinli/pen/GRpXOvo
 
@@ -88,7 +88,7 @@ pub fn select_user(usernames: &Vec<String>, text: &str) -> Result<Option<String>
 
     let selection = Select::with_theme(&theme)
         .with_prompt(text)
-        .items(&usernames)
+        .items(usernames)
         .item("Create an user")
         .interact()?;
 

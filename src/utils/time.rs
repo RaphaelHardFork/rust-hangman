@@ -1,5 +1,5 @@
 use crate::Result;
-use time::{format_description::well_known::Rfc3339, Duration, OffsetDateTime};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 pub fn now_utc() -> OffsetDateTime {
     OffsetDateTime::now_utc()
@@ -10,6 +10,6 @@ pub fn format_time(time: OffsetDateTime) -> Result<String> {
         .map_err(|_| "Cannot format to string".into())
 }
 
-pub fn parse_utc(moment: &str) -> Result<OffsetDateTime> {
-    OffsetDateTime::parse(moment, &Rfc3339).map_err(|_| "Cannot parse time".into())
-}
+// pub fn parse_utc(moment: &str) -> Result<OffsetDateTime> {
+//     OffsetDateTime::parse(moment, &Rfc3339).map_err(|_| "Cannot parse time".into())
+// }

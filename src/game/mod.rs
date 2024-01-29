@@ -15,8 +15,8 @@ use crate::utils::files::list_files;
 use crate::utils::string_to_guess;
 use crate::Result;
 use lazy_regex::regex_captures;
-use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Game {
@@ -180,7 +180,7 @@ impl Game {
             .filter_map(|f| {
                 let file_str = f.to_str()?;
                 regex_captures!(r"^([^/]+)/([^/]+)\.json$", file_str)
-                    .map(|(path, _, username)| (username.to_string(), f.to_owned()))
+                    .map(|(_, _, username)| (username.to_string(), f.to_owned()))
             })
             .collect();
 

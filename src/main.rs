@@ -5,12 +5,9 @@ mod utils;
 pub use self::error::{Error, Result};
 
 use crate::game::Game;
-use crate::utils::cli::{closed_prompt, select_user};
+use crate::utils::cli::select_user;
 use console::Term;
-use game::Player;
-use lazy_regex::regex_captures;
 use utils::cli::username_prompt;
-use utils::files::list_files;
 
 fn main() -> Result<()> {
     let mut game = Game::init_game()?;

@@ -1,7 +1,4 @@
-use std::{
-    cmp::{max, min},
-    path::Path,
-};
+use std::{cmp::min, path::Path};
 
 use crate::{utils::files::load_from_json, Result};
 use serde::{Deserialize, Serialize};
