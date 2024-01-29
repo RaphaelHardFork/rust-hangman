@@ -1,4 +1,6 @@
 pub mod cli;
+pub mod files;
+pub mod time;
 
 pub fn string_to_guess(word: &str, progress: usize) -> String {
     word.chars()
