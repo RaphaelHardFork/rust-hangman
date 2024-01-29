@@ -1,4 +1,5 @@
 use super::score::Score;
+use crate::utils::cli::info;
 use crate::utils::files::{ensure_dir, list_files, save_to_json};
 use crate::Result;
 use lazy_regex::regex_captures;
@@ -36,15 +37,6 @@ impl Player {
             })
             .collect();
 
-        // let usernames: Vec<String> = files
-        //     .iter()
-        //     .filter_map(|f| {
-        //         let f_str = f.to_str()?;
-        //         re.captures(f_str)
-        //             .and_then(|caps| caps.get(2).map(|username| username.as_str().to_string()))
-        //     })
-        //     .collect();
-
         Ok(usernames)
     }
 }
@@ -56,6 +48,7 @@ impl Player {
         ensure_dir(file)?;
         let file_ext = self.username.clone() + JSON_EXT;
         save_to_json(file.join(file_ext), &self.scores)?;
+        println!("{}", info(&"User scores saved".to_string()));
         Ok(())
     }
 

@@ -15,7 +15,7 @@ use utils::files::list_files;
 fn main() -> Result<()> {
     let mut game = Game::init_game()?;
 
-    let usernames = Player::load_users_from_json()?;
+    let usernames = game.get_usernames()?;
     let username = select_user(&usernames, "Choose an user")?;
 
     if let Some(username) = username {

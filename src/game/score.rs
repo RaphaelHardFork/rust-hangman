@@ -1,4 +1,7 @@
-use std::path::Path;
+use std::{
+    cmp::{max, min},
+    path::Path,
+};
 
 use crate::{utils::files::load_from_json, Result};
 use serde::{Deserialize, Serialize};
@@ -14,9 +17,8 @@ pub struct Score {
 }
 
 impl Score {
-    pub fn calculate_score(word: &str, attemps: usize) -> Result<Self> {
+    pub fn calculate_score(word: &str, value: usize) -> Result<Self> {
         let timestamp = format_time(now_utc())?;
-        let value = 300 + ((word.len() - 3) * 50) - attemps * 50;
 
         Ok(Self {
             value,
@@ -25,13 +27,29 @@ impl Score {
         })
     }
 
-    pub fn calculate_pure_score(word: &str, attemps: usize) -> usize {
-        let value = 300 + ((word.len() - 3) * 50) - attemps * 50;
-        value
-    }
-
     pub fn load_score_from_json(file_path: &Path) -> Result<Vec<Score>> {
         let scores = load_from_json::<Vec<Score>>(file_path)?;
         Ok(scores)
     }
 }
+
+// region:			--- Pure functions
+
+pub fn score_value(progress: usize, attemps: usize) -> usize {
+    let full_letter = min(progress, 3);
+    let mut small_letter = 0;
+
+    if progress >= 3 {
+        small_letter = progress - 3;
+    }
+
+    let value = full_letter * 100 + small_letter * 50;
+
+    if value < attemps * 50 {
+        0
+    } else {
+        value - attemps * 50
+    }
+}
+
+// endregion:		--- Pure functions

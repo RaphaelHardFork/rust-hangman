@@ -3,18 +3,18 @@ mod hangman;
 mod player;
 mod score;
 
-use lazy_regex::regex_captures;
-
 pub use self::player::Player;
 
 use self::dict::Dict;
 use self::hangman::Hangman;
 use self::player::SCORES_DIR;
 use self::score::Score;
+use crate::game::score::score_value;
 use crate::utils::cli::{closed_prompt, info, letter_prompt, loose, loose_b, win, win_b};
 use crate::utils::files::list_files;
 use crate::utils::string_to_guess;
 use crate::Result;
+use lazy_regex::regex_captures;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -66,7 +66,7 @@ impl Game {
         println!("Attempts {}/5", self.hangman.attemps);
         println!(
             "Score: {}\n\n",
-            Score::calculate_pure_score(&self.word, self.hangman.attemps)
+            score_value(self.hangman.progress, self.hangman.attemps)
         );
         println!(
             "Word to guess: {}\n",
@@ -125,19 +125,11 @@ impl Game {
     pub fn is_game_over(&mut self) -> Result<bool> {
         // game winned
         if self.hangman.progress == self.word.len() {
-            println!(
-                "{} {}\n",
-                win(&"Congratulations! You guessed the word: ".to_string()),
-                win_b(&self.word)
-            );
+            self.print_round_win();
             self.calculate_score()?;
             Ok(true)
         } else if self.hangman.attemps == 5 {
-            println!(
-                "{} {}\n",
-                loose(&"You lose the word was: ".to_string()),
-                loose_b(&self.word)
-            );
+            self.print_round_lose();
             Ok(true)
         } else {
             Ok(false)
@@ -146,18 +138,9 @@ impl Game {
 
     fn calculate_score(&mut self) -> Result<()> {
         if let Some(user) = &mut self.user {
-            let score = Score::calculate_score(&self.word, self.hangman.attemps)?;
+            let value = score_value(self.hangman.progress, self.hangman.attemps);
+            let score = Score::calculate_score(&self.word, value)?;
             user.scores.push(score);
-        }
-        Ok(())
-    }
-
-    pub fn load_scores(&mut self, username: &str) -> Result<()> {
-        let file_path = format!(".scores/{}.json", username);
-        let file_path: &Path = file_path.as_ref();
-        let scores = Score::load_score_from_json(&file_path)?;
-        if let Some(user) = &mut self.user {
-            user.scores = scores;
         }
         Ok(())
     }
@@ -175,13 +158,10 @@ impl Game {
 
     pub fn quit(&self) -> Result<()> {
         match &self.user {
-            Some(user) => {
-                println!("{}", info(&"User scores saved".to_string()));
-                user.save_user()?
-            }
+            Some(user) => user.save_user()?,
             None => {}
         };
-        println!("{}", info(&"\nBye! See you soon\n".to_string()));
+        self.print_game_out();
         Ok(())
     }
 }
@@ -224,6 +204,19 @@ impl Game {
             .ok_or(format!("Cannot find path for {}", username))?;
 
         Ok(path)
+    }
+
+    pub fn load_scores(&mut self, username: &str) -> Result<()> {
+        let mut players_hashmap = self.get_players_hashmap()?;
+
+        let file_path = self.get_username_path(&mut players_hashmap, username)?;
+        let scores = Score::load_score_from_json(file_path.as_path())?;
+
+        if let Some(user) = &mut self.user {
+            user.scores = scores;
+        }
+
+        Ok(())
     }
 }
 // endregion:		--- Game Players
