@@ -32,7 +32,7 @@ impl Score {
 
 // region:			--- Pure functions
 
-pub fn score_value(progress: usize, attemps: usize) -> usize {
+pub fn score_value(progress: usize, attemps: usize, hint_used: bool) -> usize {
     let full_letter = min(progress, 3);
     let mut small_letter = 0;
 
@@ -45,7 +45,12 @@ pub fn score_value(progress: usize, attemps: usize) -> usize {
     if value < attemps * 50 {
         0
     } else {
-        value - attemps * 50
+        let res = value - attemps * 50;
+        if hint_used {
+            res / 2
+        } else {
+            res
+        }
     }
 }
 

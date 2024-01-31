@@ -1,15 +1,20 @@
 mod error;
 mod game;
+mod hints;
 mod utils;
+
+use std::io::Write;
 
 pub use self::error::{Error, Result};
 
 use crate::game::Game;
+use crate::hints::generate_hint;
 use crate::utils::cli::select_user;
 use console::Term;
 use utils::cli::username_prompt;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let mut game = Game::init_game()?;
 
     let usernames = game.get_usernames()?;
@@ -23,7 +28,7 @@ fn main() -> Result<()> {
         game.register_user(&username);
     }
 
-    let term = Term::stdout();
+    let mut term = Term::stdout();
 
     loop {
         // clean the screen
@@ -42,8 +47,10 @@ fn main() -> Result<()> {
             }
         }
 
+        game.print_hint_used();
+
         // if the game continue guess another letter
-        game.guess_a_letter()?;
+        game.guess_a_letter(&mut term).await?;
     }
 
     Ok(())

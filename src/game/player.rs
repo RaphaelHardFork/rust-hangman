@@ -19,7 +19,7 @@ pub struct Player {
 impl Player {
     pub fn create(username: &str) -> Self {
         Self {
-            username: username.to_string(),
+            username: username.to_string().to_lowercase(),
             scores: vec![],
         }
     }

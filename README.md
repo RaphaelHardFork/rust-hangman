@@ -11,6 +11,7 @@
 - [ ] handle error well
 - [x] create types for the game (+)
 - [ ] choose language (create a config if needed)
-- [ ] hint with ollama (+++) as an option
+- [x] hint with ollama (+++) as an option
 - [x] do unit test (++)
 - [ ] comment code only as needed (try rust doc)
+- [ ] replace print by write term

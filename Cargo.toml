@@ -11,11 +11,17 @@ unused = "allow"       # __DEV__
 rand = "0.8.4"
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
 lazy-regex = "3.1.0"
+# Async
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
 # CLI
 console = "0.15.8"
 dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
+textwrap = "0.16"
 # Files
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 walkdir = "2"
 globset = "0.4"
+# Ollama
+ollama-rs = { version = "0.1", features = ["stream"] }

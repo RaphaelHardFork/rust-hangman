@@ -10,10 +10,12 @@ use self::hangman::Hangman;
 use self::player::SCORES_DIR;
 use self::score::Score;
 use crate::game::score::score_value;
+use crate::hints::generate_hint;
 use crate::utils::cli::{closed_prompt, info, letter_prompt, loose, loose_b, win, win_b};
 use crate::utils::files::list_files;
 use crate::utils::string_to_guess;
 use crate::Result;
+use console::Term;
 use lazy_regex::regex_captures;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -24,6 +26,7 @@ pub struct Game {
     pub hangman: Hangman,
     pub word: String,
     pub user: Option<Player>,
+    pub hint: Option<String>,
 }
 
 // region:			--- Game Constructors
@@ -46,12 +49,14 @@ impl Game {
             word,
             hangman: Hangman::new(),
             user: None,
+            hint: None,
         })
     }
 
     pub fn new_hangman(&mut self) -> Result<()> {
         self.word = self.dict.get_random_word()?;
         self.hangman = Hangman::new();
+        self.hint = None;
 
         Ok(())
     }
@@ -61,17 +66,31 @@ impl Game {
 // region:			--- Game Messages
 
 impl Game {
+    pub fn print_hint_used(&self) {
+        if self.hint.is_none() {
+            println!("Press '?' to have an hint.");
+        } else {
+            println!("{}", self.hint.as_ref().unwrap());
+        }
+    }
+
     pub fn print_round_start(&self) {
         self.hangman.print_hangman();
         println!("Attempts {}/5", self.hangman.attemps);
 
         if let Some(user) = &self.user {
-            println!("Best score: {:?}", user.scores[0].value);
+            if user.scores.len() > 0 {
+                println!("Best score: {:?}", user.scores[0].value);
+            }
         }
 
         println!(
             "Score: {}\n\n",
-            score_value(self.hangman.progress, self.hangman.attemps)
+            score_value(
+                self.hangman.progress,
+                self.hangman.attemps,
+                self.hint.is_some()
+            )
         );
         println!(
             "Word to guess: {}\n",
@@ -105,7 +124,7 @@ impl Game {
 // region:			--- Game Logic
 
 impl Game {
-    pub fn guess_a_letter(&mut self) -> Result<()> {
+    pub async fn guess_a_letter(&mut self, term: &mut Term) -> Result<()> {
         let letter = letter_prompt("Guess the next letter")?;
 
         let letter_to_guess = self
@@ -113,6 +132,12 @@ impl Game {
             .chars()
             .nth(self.hangman.progress)
             .ok_or("No more letter to guess")?;
+
+        if letter == '?' && self.hint.is_none() {
+            let hint = generate_hint(term, &self.word).await?;
+            println!("->> {}", hint);
+            self.hint = Some(hint);
+        }
 
         if letter == letter_to_guess {
             self.hangman.progress();
@@ -143,7 +168,11 @@ impl Game {
 
     fn calculate_score(&mut self) -> Result<()> {
         if let Some(user) = &mut self.user {
-            let value = score_value(self.hangman.progress, self.hangman.attemps);
+            let value = score_value(
+                self.hangman.progress,
+                self.hangman.attemps,
+                self.hint.is_some(),
+            );
             let score = Score::calculate_score(&self.word, value)?;
             user.scores.push(score);
             user.scores.sort_by_key(|k| !k.value);
@@ -243,6 +272,7 @@ mod tests {
             hangman: Hangman::new(),
             word: game.word.clone(),
             user: None,
+            hint: None,
         };
 
         assert_eq!(game, fx_game);
