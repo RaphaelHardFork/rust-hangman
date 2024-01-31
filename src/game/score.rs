@@ -8,9 +8,9 @@ use crate::utils::time::{format_time, now_utc};
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct Score {
-    value: usize,
-    word: String,
-    timestamp: String,
+    pub value: usize,
+    pub word: String,
+    pub timestamp: String,
 }
 
 impl Score {

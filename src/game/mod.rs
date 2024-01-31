@@ -64,6 +64,11 @@ impl Game {
     pub fn print_round_start(&self) {
         self.hangman.print_hangman();
         println!("Attempts {}/5", self.hangman.attemps);
+
+        if let Some(user) = &self.user {
+            println!("Best score: {:?}", user.scores[0].value);
+        }
+
         println!(
             "Score: {}\n\n",
             score_value(self.hangman.progress, self.hangman.attemps)
@@ -141,6 +146,7 @@ impl Game {
             let value = score_value(self.hangman.progress, self.hangman.attemps);
             let score = Score::calculate_score(&self.word, value)?;
             user.scores.push(score);
+            user.scores.sort_by_key(|k| !k.value);
         }
         Ok(())
     }
