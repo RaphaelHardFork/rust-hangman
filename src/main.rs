@@ -3,12 +3,9 @@ mod game;
 mod hints;
 mod utils;
 
-use std::io::Write;
-
 pub use self::error::{Error, Result};
 
 use crate::game::Game;
-use crate::hints::generate_hint;
 use crate::utils::cli::select_user;
 use console::Term;
 use utils::cli::username_prompt;
@@ -33,7 +30,7 @@ async fn main() -> Result<()> {
     loop {
         // clean the screen
         term.clear_screen()?;
-        println!("New game with: {}", game.word); // DEV for answer
+        // println!("New game with: {}", game.word); // DEV for answer
 
         // display game state
         game.print_round_start();

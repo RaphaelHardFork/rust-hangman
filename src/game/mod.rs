@@ -33,7 +33,7 @@ pub struct Game {
 impl Game {
     pub fn init_game() -> Result<Self> {
         // load a dictionnary
-        let dict = Dict::new();
+        let dict = Dict::load_or_create()?;
         let word = dict.get_random_word()?;
 
         println!(
@@ -79,7 +79,7 @@ impl Game {
         println!("Attempts {}/5", self.hangman.attemps);
 
         if let Some(user) = &self.user {
-            if user.scores.len() > 0 {
+            if !user.scores.is_empty() {
                 println!("Best score: {:?}", user.scores[0].value);
             }
         }
@@ -137,9 +137,9 @@ impl Game {
             let hint = generate_hint(term, &self.word).await?;
             println!("->> {}", hint);
             self.hint = Some(hint);
-        }
-
-        if letter == letter_to_guess {
+        } else if letter == '!' {
+            self.new_hangman()?;
+        } else if letter == letter_to_guess {
             self.hangman.progress();
         } else {
             self.hangman.attemp();
@@ -268,7 +268,7 @@ mod tests {
     fn test_init_game_ok() -> Result<()> {
         let game = Game::init_game()?;
         let fx_game = Game {
-            dict: Dict::new(),
+            dict: Dict::load_or_create()?,
             hangman: Hangman::new(),
             word: game.word.clone(),
             user: None,

@@ -1,4 +1,14 @@
-# Rust Hangman
+# Rust Hangman CLI game
+
+*An hangman CLI game, with hints generated with Ollama.*
+
+## Usage
+
+```bash
+ollama run dolphin-phi
+ollama serve
+cargo run
+```
 
 ## TODO
 
@@ -12,6 +22,8 @@
 - [x] create types for the game (+)
 - [ ] choose language (create a config if needed)
 - [x] hint with ollama (+++) as an option
+    - [ ] hint as an option if ollama not installed
+    - [ ] generate a word with the model
 - [x] do unit test (++)
 - [ ] comment code only as needed (try rust doc)
 - [ ] replace print by write term

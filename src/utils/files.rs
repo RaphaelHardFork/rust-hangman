@@ -4,7 +4,7 @@ use walkdir::WalkDir;
 use crate::Result;
 use std::{
     fs::{self, File},
-    io::BufReader,
+    io::{BufRead, BufReader},
     path::{Path, PathBuf},
 };
 
@@ -26,6 +26,18 @@ where
 {
     let val = serde_json::from_reader(get_reader(file.as_ref())?)?;
     Ok(val)
+}
+
+pub fn load_from_txt(file: impl AsRef<Path>) -> Result<Vec<String>> {
+    let reader = get_reader(file.as_ref())?;
+    let mut words: Vec<String> = Vec::new();
+
+    for line in reader.lines() {
+        let line = line?;
+        words.push(line.to_uppercase());
+    }
+
+    Ok(words)
 }
 // endregion:		--- File write/parse
 
