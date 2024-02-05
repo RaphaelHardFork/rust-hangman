@@ -25,6 +25,7 @@ pub struct Game {
     pub dict: Dict,
     pub hangman: Hangman,
     pub word: String,
+    pub guess: String,
     pub user: Option<Player>,
     pub hint: Option<String>,
 }
@@ -46,6 +47,7 @@ impl Game {
 
         Ok(Self {
             dict,
+            guess: string_to_guess(&word, 0),
             word,
             hangman: Hangman::new(),
             user: None,
@@ -57,6 +59,7 @@ impl Game {
         self.word = self.dict.get_random_word()?;
         self.hangman = Hangman::new();
         self.hint = None;
+        self.guess = string_to_guess(&self.word, 0);
 
         Ok(())
     }
@@ -125,7 +128,28 @@ impl Game {
 
 impl Game {
     pub async fn guess_a_letter(&mut self, term: &mut Term) -> Result<()> {
-        let letter = letter_prompt("Guess the next letter")?;
+        let cmd = letter_prompt("Guess the next letter")?;
+
+        // cmd on the game
+        if cmd == '?' && self.hint.is_none() {
+            let hint = generate_hint(term, &self.word).await?;
+            println!("->> {}", hint);
+            self.hint = Some(hint);
+        } else if cmd == '!' {
+            self.new_hangman()?;
+        }
+        // => should return
+
+        let mut guessed_letter = 0;
+
+        for (index, letter) in self.word.chars().enumerate() {
+            if letter == cmd {
+                self.guess.replace(from, to)
+                self.guess.insert(index, letter);
+                // change guess
+                guessed_letter += 1;
+            }
+        }
 
         let letter_to_guess = self
             .word
@@ -133,13 +157,13 @@ impl Game {
             .nth(self.hangman.progress)
             .ok_or("No more letter to guess")?;
 
-        if letter == '?' && self.hint.is_none() {
+        if cmd == '?' && self.hint.is_none() {
             let hint = generate_hint(term, &self.word).await?;
             println!("->> {}", hint);
             self.hint = Some(hint);
-        } else if letter == '!' {
+        } else if cmd == '!' {
             self.new_hangman()?;
-        } else if letter == letter_to_guess {
+        } else if cmd == letter_to_guess {
             self.hangman.progress();
         } else {
             self.hangman.attemp();
@@ -270,6 +294,7 @@ mod tests {
         let fx_game = Game {
             dict: Dict::load_or_create()?,
             hangman: Hangman::new(),
+            guess: string_to_guess(&game.word, 0),
             word: game.word.clone(),
             user: None,
             hint: None,
