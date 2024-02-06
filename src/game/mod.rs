@@ -13,7 +13,6 @@ use crate::game::score::score_value;
 use crate::hints::generate_hint;
 use crate::utils::cli::{closed_prompt, info, letter_prompt, loose, loose_b, win, win_b};
 use crate::utils::files::list_files;
-use crate::utils::string_to_guess;
 use crate::Result;
 use console::Term;
 use lazy_regex::regex_captures;
@@ -26,6 +25,7 @@ pub struct Game {
     pub hangman: Hangman,
     pub word: String,
     pub guess: String,
+    pub attemps: Vec<char>,
     pub user: Option<Player>,
     pub hint: Option<String>,
 }
@@ -47,8 +47,9 @@ impl Game {
 
         Ok(Self {
             dict,
-            guess: string_to_guess(&word, 0),
+            guess: String::from("_").repeat(word.len()),
             word,
+            attemps: Vec::new(),
             hangman: Hangman::new(),
             user: None,
             hint: None,
@@ -59,7 +60,8 @@ impl Game {
         self.word = self.dict.get_random_word()?;
         self.hangman = Hangman::new();
         self.hint = None;
-        self.guess = string_to_guess(&self.word, 0);
+        self.guess = String::from("_").repeat(self.word.len());
+        self.attemps = Vec::new();
 
         Ok(())
     }
@@ -95,10 +97,13 @@ impl Game {
                 self.hint.is_some()
             )
         );
-        println!(
-            "Word to guess: {}\n",
-            string_to_guess(&self.word, self.hangman.progress)
-        );
+        let guess = self
+            .guess
+            .chars()
+            .map(|c| c.to_string() + " ")
+            .collect::<Vec<_>>()
+            .join("");
+        println!("Word to guess: {}\n", guess.trim());
     }
 
     pub fn print_round_win(&self) {
@@ -128,44 +133,33 @@ impl Game {
 
 impl Game {
     pub async fn guess_a_letter(&mut self, term: &mut Term) -> Result<()> {
-        let cmd = letter_prompt("Guess the next letter")?;
+        let cmd = letter_prompt("Guess the next letter", self.guess.clone())?;
 
         // cmd on the game
         if cmd == '?' && self.hint.is_none() {
             let hint = generate_hint(term, &self.word).await?;
             println!("->> {}", hint);
             self.hint = Some(hint);
+            return Ok(());
         } else if cmd == '!' {
             self.new_hangman()?;
+            return Ok(());
         }
-        // => should return
 
         let mut guessed_letter = 0;
 
         for (index, letter) in self.word.chars().enumerate() {
             if letter == cmd {
-                self.guess.replace(from, to)
-                self.guess.insert(index, letter);
-                // change guess
+                let mut guess: Vec<char> = self.guess.chars().collect();
+                guess[index] = letter;
                 guessed_letter += 1;
+                self.hangman.progress();
+                let a: Vec<String> = guess.iter().map(|c| c.to_string()).collect();
+                self.guess = a.join("");
             }
         }
 
-        let letter_to_guess = self
-            .word
-            .chars()
-            .nth(self.hangman.progress)
-            .ok_or("No more letter to guess")?;
-
-        if cmd == '?' && self.hint.is_none() {
-            let hint = generate_hint(term, &self.word).await?;
-            println!("->> {}", hint);
-            self.hint = Some(hint);
-        } else if cmd == '!' {
-            self.new_hangman()?;
-        } else if cmd == letter_to_guess {
-            self.hangman.progress();
-        } else {
+        if guessed_letter == 0 {
             self.hangman.attemp();
         }
 
@@ -294,8 +288,9 @@ mod tests {
         let fx_game = Game {
             dict: Dict::load_or_create()?,
             hangman: Hangman::new(),
-            guess: string_to_guess(&game.word, 0),
+            guess: String::from("_").repeat(game.word.len()),
             word: game.word.clone(),
+            attemps: Vec::new(),
             user: None,
             hint: None,
         };

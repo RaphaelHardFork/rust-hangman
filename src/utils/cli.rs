@@ -47,7 +47,7 @@ pub fn username_prompt(text: &str) -> Result<String> {
     Ok(res)
 }
 
-pub fn letter_prompt(text: &str) -> Result<char> {
+pub fn letter_prompt(text: &str, guessed: String) -> Result<char> {
     let theme = ColorfulTheme {
         prompt_style: Style::new().for_stderr().blue(),
         prompt_suffix: style("?".to_string()).blue().for_stderr(),
@@ -57,6 +57,8 @@ pub fn letter_prompt(text: &str) -> Result<char> {
     let input = Input::with_theme(&theme).validate_with(|input: &String| -> Result<()> {
         if input.len() > 1 {
             Err("Only one letter accepted".into())
+        } else if guessed.contains(&input.to_uppercase()) {
+            Err(format!("You already tried '{}'", input.to_uppercase()).into())
         } else {
             Ok(())
         }
