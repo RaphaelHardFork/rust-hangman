@@ -2,20 +2,20 @@ use console::{style, Style, StyledObject};
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use lazy_regex::regex_is_match;
 
-use crate::Result;
+use crate::Result_legacy;
 
 // 8-bit color picker => https://codepen.io/kevinli/pen/GRpXOvo
 
 // region:			--- Text Prompt
 
-pub fn closed_prompt(text: &str) -> Result<String> {
+pub fn closed_prompt(text: &str) -> Result_legacy<String> {
     let theme = ColorfulTheme {
         prompt_style: Style::new().for_stderr().black(),
         prompt_suffix: style("?".to_string()).black().for_stderr(),
         ..Default::default()
     };
 
-    let input = Input::with_theme(&theme).validate_with(|input: &String| -> Result<()> {
+    let input = Input::with_theme(&theme).validate_with(|input: &String| -> Result_legacy<()> {
         match input.as_str() {
             "y" | "n" => Ok(()),
             _ => Err("Only 'y' or 'n' accepted".into()),
@@ -27,14 +27,14 @@ pub fn closed_prompt(text: &str) -> Result<String> {
     Ok(res)
 }
 
-pub fn username_prompt(text: &str) -> Result<String> {
+pub fn username_prompt(text: &str) -> Result_legacy<String> {
     let theme = ColorfulTheme {
         prompt_style: Style::new().for_stderr().black(),
         prompt_suffix: style("?".to_string()).black().for_stderr(),
         ..Default::default()
     };
 
-    let input = Input::with_theme(&theme).validate_with(|input: &String| -> Result<()> {
+    let input = Input::with_theme(&theme).validate_with(|input: &String| -> Result_legacy<()> {
         if regex_is_match!(r"^[a-zA-Z0-9]+$", input) {
             Ok(())
         } else {
@@ -47,14 +47,14 @@ pub fn username_prompt(text: &str) -> Result<String> {
     Ok(res)
 }
 
-pub fn letter_prompt(text: &str, guessed: String) -> Result<char> {
+pub fn letter_prompt(text: &str, guessed: String) -> Result_legacy<char> {
     let theme = ColorfulTheme {
         prompt_style: Style::new().for_stderr().blue(),
         prompt_suffix: style("?".to_string()).blue().for_stderr(),
         ..Default::default()
     };
 
-    let input = Input::with_theme(&theme).validate_with(|input: &String| -> Result<()> {
+    let input = Input::with_theme(&theme).validate_with(|input: &String| -> Result_legacy<()> {
         if input.len() > 1 {
             Err("Only one letter accepted".into())
         } else if guessed.contains(&input.to_uppercase()) {
@@ -79,7 +79,7 @@ pub fn letter_prompt(text: &str, guessed: String) -> Result<char> {
 
 // region:			--- Select
 
-pub fn select_user(usernames: &Vec<String>, text: &str) -> Result<Option<String>> {
+pub fn select_user(usernames: &Vec<String>, text: &str) -> Result_legacy<Option<String>> {
     let theme = ColorfulTheme {
         prompt_style: Style::new().blue(),
         active_item_prefix: style("๏".to_string()).color256(178),

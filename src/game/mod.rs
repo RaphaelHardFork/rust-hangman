@@ -1,8 +1,10 @@
 mod dict;
+mod error;
 mod hangman;
 mod player;
 mod score;
 
+pub use self::error::{Error, Result};
 pub use self::player::Player;
 
 use self::dict::Dict;
@@ -13,7 +15,7 @@ use crate::game::score::score_value;
 use crate::hints::generate_hint;
 use crate::utils::cli::{closed_prompt, info, letter_prompt, loose, loose_b, win, win_b};
 use crate::utils::files::list_files;
-use crate::Result;
+use crate::Result_legacy;
 use console::Term;
 use lazy_regex::regex_captures;
 use std::collections::HashMap;
@@ -34,7 +36,7 @@ pub struct Game {
 impl Game {
     pub fn init_game() -> Result<Self> {
         // load a dictionnary
-        let dict = Dict::load_or_create()?;
+        let dict = Dict::load_or_create();
         let word = dict.get_random_word()?;
 
         println!(
@@ -132,7 +134,7 @@ impl Game {
 // region:			--- Game Logic
 
 impl Game {
-    pub async fn guess_a_letter(&mut self, term: &mut Term) -> Result<()> {
+    pub async fn guess_a_letter(&mut self, term: &mut Term) -> Result_legacy<()> {
         let cmd = letter_prompt("Guess the next letter", self.guess.clone())?;
 
         // cmd on the game
@@ -141,7 +143,8 @@ impl Game {
             println!("->> {}", hint);
             self.hint = Some(hint);
             return Ok(());
-        } else if cmd == '!' {
+        }
+        if cmd == '!' {
             self.new_hangman()?;
             return Ok(());
         }
@@ -170,7 +173,7 @@ impl Game {
         self.user = Some(Player::create(username))
     }
 
-    pub fn is_game_over(&mut self) -> Result<bool> {
+    pub fn is_game_over(&mut self) -> Result_legacy<bool> {
         // game winned
         if self.hangman.progress == self.word.len() {
             self.print_round_win();
@@ -184,7 +187,7 @@ impl Game {
         }
     }
 
-    fn calculate_score(&mut self) -> Result<()> {
+    fn calculate_score(&mut self) -> Result_legacy<()> {
         if let Some(user) = &mut self.user {
             let value = score_value(
                 self.hangman.progress,
@@ -223,7 +226,7 @@ impl Game {
 
 // region:			--- Game Players
 impl Game {
-    pub fn get_players_hashmap(&self) -> Result<HashMap<String, PathBuf>> {
+    pub fn get_players_hashmap(&self) -> Result_legacy<HashMap<String, PathBuf>> {
         // read JSON
         let files = list_files(SCORES_DIR.as_ref(), None, None)?;
 
@@ -240,7 +243,7 @@ impl Game {
         Ok(players_hashmap)
     }
 
-    pub fn get_usernames(&self) -> Result<Vec<String>> {
+    pub fn get_usernames(&self) -> Result_legacy<Vec<String>> {
         let players_hashmap = self.get_players_hashmap()?;
         let usernames: Vec<String> = players_hashmap.keys().map(|k| k.to_owned()).collect();
 
@@ -251,7 +254,7 @@ impl Game {
         &self,
         players_hashmap: &mut HashMap<String, PathBuf>,
         username: &str,
-    ) -> Result<PathBuf> {
+    ) -> Result_legacy<PathBuf> {
         let path = players_hashmap
             .remove(username)
             .ok_or(format!("Cannot find path for {}", username))?;
@@ -259,7 +262,7 @@ impl Game {
         Ok(path)
     }
 
-    pub fn load_scores(&mut self, username: &str) -> Result<()> {
+    pub fn load_scores(&mut self, username: &str) -> Result_legacy<()> {
         let mut players_hashmap = self.get_players_hashmap()?;
 
         let file_path = self.get_username_path(&mut players_hashmap, username)?;

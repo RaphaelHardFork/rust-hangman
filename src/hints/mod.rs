@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::Result_legacy;
 use console::Term;
 use futures::StreamExt;
 use ollama_rs::generation::completion::request::GenerationRequest;
@@ -15,7 +15,7 @@ Be consise. Skip describing you you are doing.
 "#;
 pub const HINT_PROMPT: &str = "";
 
-pub async fn generate_hint(term: &mut Term, word: &str) -> Result<String> {
+pub async fn generate_hint(term: &mut Term, word: &str) -> Result_legacy<String> {
     let ollama = Ollama::default();
     let prompt = format!("{} {}", HINT_PROMPT, word);
 

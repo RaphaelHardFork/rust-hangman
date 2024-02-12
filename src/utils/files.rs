@@ -1,12 +1,14 @@
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use walkdir::WalkDir;
 
-use crate::Result;
+use crate::Result_legacy;
 use std::{
     fs::{self, File},
     io::{BufRead, BufReader},
     path::{Path, PathBuf},
 };
+
+use super::{Error, Result};
 
 // region:			--- File write/parse
 pub fn save_to_json<T>(file: impl AsRef<Path>, data: &T) -> Result<()>
@@ -14,13 +16,13 @@ where
     T: serde::Serialize,
 {
     let file = file.as_ref();
-    let file = File::create(file).map_err(|e| format!("Cannot create file '{:?}': {}", file, e))?;
+    let file = File::create(file)?;
 
-    serde_json::to_writer_pretty(file, data)?;
+    serde_json::to_writer_pretty(file, data).map_err(|_| Err(Error::JsonSerialisationFail))?;
     Ok(())
 }
 
-pub fn load_from_json<T>(file: impl AsRef<Path>) -> Result<T>
+pub fn load_from_json<T>(file: impl AsRef<Path>) -> Result_legacy<T>
 where
     T: serde::de::DeserializeOwned,
 {
@@ -28,7 +30,7 @@ where
     Ok(val)
 }
 
-pub fn load_from_txt(file: impl AsRef<Path>) -> Result<Vec<String>> {
+pub fn load_from_txt(file: impl AsRef<Path>) -> Result_legacy<Vec<String>> {
     let reader = get_reader(file.as_ref())?;
     let mut words: Vec<String> = Vec::new();
 
@@ -42,7 +44,7 @@ pub fn load_from_txt(file: impl AsRef<Path>) -> Result<Vec<String>> {
 // endregion:		--- File write/parse
 
 // region:			--- File utils
-fn get_reader(file: &Path) -> Result<BufReader<File>> {
+fn get_reader(file: &Path) -> Result_legacy<BufReader<File>> {
     let Ok(file) = File::open(file) else {
         return Err(format!("File not found: {}", file.display()).into());
     };
@@ -53,7 +55,7 @@ fn get_reader(file: &Path) -> Result<BufReader<File>> {
 
 // region:			--- Dir utils
 /// Returns true if  one or more dir was created
-pub fn ensure_dir(dir: &Path) -> Result<bool> {
+pub fn ensure_dir(dir: &Path) -> Result_legacy<bool> {
     if dir.is_dir() {
         Ok(false)
     } else {
@@ -66,7 +68,7 @@ pub fn list_files(
     dir: &Path,
     include_globs: Option<&[&str]>,
     exclude_globs: Option<&[&str]>,
-) -> Result<Vec<PathBuf>> {
+) -> Result_legacy<Vec<PathBuf>> {
     let base_dir_exclude = base_dir_exclude_globs()?;
 
     // recursive depth
@@ -111,11 +113,11 @@ pub fn list_files(
     Ok(paths.collect())
 }
 
-fn base_dir_exclude_globs() -> Result<GlobSet> {
+fn base_dir_exclude_globs() -> Result_legacy<GlobSet> {
     get_glob_set(&[".git", "target"])
 }
 
-pub fn get_glob_set(globs: &[&str]) -> Result<GlobSet> {
+pub fn get_glob_set(globs: &[&str]) -> Result_legacy<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     for glob in globs {
         builder.add(Glob::new(glob)?);

@@ -3,7 +3,7 @@ mod game;
 mod hints;
 mod utils;
 
-pub use self::error::{Error, Result};
+pub use self::error::{Error, Result_legacy};
 
 use crate::game::Game;
 use crate::utils::cli::select_user;
@@ -11,7 +11,7 @@ use console::Term;
 use utils::cli::username_prompt;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result_legacy<()> {
     let mut game = Game::init_game()?;
 
     let usernames = game.get_usernames()?;
@@ -39,9 +39,8 @@ async fn main() -> Result<()> {
         if game.is_game_over()? {
             if game.will_play_again()? {
                 continue;
-            } else {
-                break;
             }
+            break;
         }
 
         game.print_hint_used();
