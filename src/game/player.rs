@@ -1,7 +1,8 @@
 use super::score::Score;
+use super::Result;
 use crate::utils::cli::info;
 use crate::utils::files::{ensure_dir, save_to_json};
-use crate::Result;
+use crate::Result_legacy;
 use serde::Serialize;
 use std::path::Path;
 

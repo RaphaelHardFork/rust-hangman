@@ -25,3 +25,5 @@ walkdir = "2"
 globset = "0.4"
 # Ollama
 ollama-rs = { version = "0.1", features = ["stream"] }
+derive_more = {version = "1.0.0-beta", features = ["from"] }
+serde_with = {version = "3", features = ["time_0_3"]}

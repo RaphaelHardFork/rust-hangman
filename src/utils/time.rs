@@ -1,11 +1,11 @@
-use crate::Result;
+use crate::Result_legacy;
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 pub fn now_utc() -> OffsetDateTime {
     OffsetDateTime::now_utc()
 }
 
-pub fn format_time(time: OffsetDateTime) -> Result<String> {
+pub fn format_time(time: OffsetDateTime) -> Result_legacy<String> {
     time.format(&Rfc3339)
         .map_err(|_| "Cannot format to string".into())
 }

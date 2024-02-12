@@ -1,6 +1,6 @@
 use std::{cmp::min, path::Path};
 
-use crate::{utils::files::load_from_json, Result};
+use crate::{utils::files::load_from_json, Result_legacy};
 use serde::{Deserialize, Serialize};
 
 use crate::utils::time::{format_time, now_utc};
@@ -14,7 +14,7 @@ pub struct Score {
 }
 
 impl Score {
-    pub fn calculate_score(word: &str, value: usize) -> Result<Self> {
+    pub fn calculate_score(word: &str, value: usize) -> Result_legacy<Self> {
         let timestamp = format_time(now_utc())?;
 
         Ok(Self {
@@ -24,7 +24,7 @@ impl Score {
         })
     }
 
-    pub fn load_score_from_json(file_path: &Path) -> Result<Vec<Score>> {
+    pub fn load_score_from_json(file_path: &Path) -> Result_legacy<Vec<Score>> {
         let scores = load_from_json::<Vec<Score>>(file_path)?;
         Ok(scores)
     }
